@@ -3,19 +3,23 @@ package io.coursework;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        Path filePath = Path.of("prime_numbers.py");
-
-        String content;
+        /*Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter .py file name: ");
+        String fileName = scanner.nextLine();*/
+        String fileName = "prime_numbers.py";
+        String source;
         try {
-            content = Files.readString(filePath);
+            source = new String(Files.readAllBytes(Paths.get(fileName)));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(content);
+
+        Lexer lexer = new Lexer(source.replaceAll(" {4}", "\t"));
+        lexer.start();
+        lexer.writeToFile();
     }
 }
