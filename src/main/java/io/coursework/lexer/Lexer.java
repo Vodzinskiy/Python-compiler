@@ -1,7 +1,7 @@
 package io.coursework.lexer;
 
 
-import io.coursework.Parser;
+import io.coursework.parser.Parser;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,7 +15,7 @@ public class Lexer {
     private final ArrayList<String> lexemes = new ArrayList<>();
     private final ArrayList<Position> positions = new ArrayList<>();
 
-    private String[] senteces;
+    private String[] sentences;
 
     private final String[] cycleoperators = {"for", "while"};
     private final String[] operators = {"+", "-", "%", "*"};
@@ -69,14 +69,15 @@ public class Lexer {
                     } else {
                         errors = true;
                         System.out.println("\nline " + positions.get(i).getLine());
-                        System.out.println(senteces[positions.get(i).getLine()-1]);
+                        System.out.println(sentences[positions.get(i).getLine()-1]);
                         System.out.println(" ".repeat(positions.get(i).getSymbol()-1) + "^".repeat(lexemes.get(i).length()));
                         System.out.println("Error: invalid name or symbol");
+                        System.exit(1);
                     }
                 }
             }
         }
-        Parser parser = new Parser(lexemes);
+        Parser parser = new Parser(tokenList, code);
         parser.start();
     }
 
@@ -84,7 +85,7 @@ public class Lexer {
      * converting the code into a sentences
      */
     public void intoSentences(String code) {
-        senteces = code.split("\n");
+        sentences = code.split("\n");
     }
 
     /**
@@ -102,6 +103,7 @@ public class Lexer {
             }
             if (c == '\n' && comment) {
                 comment = false;
+                lineCount += 1;
                 continue;
             }
 
@@ -151,6 +153,7 @@ public class Lexer {
         }
         if (!tempLexeme.isEmpty()) {
             lexemes.add(tempLexeme.toString());
+            positions.add(new Position(lineCount, symbolCount - tempLexeme.length()));
         }
     }
 
