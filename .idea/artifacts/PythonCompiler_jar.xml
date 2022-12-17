@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="PythonCompiler:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/PythonCompiler_jar</output-path>
+    <root id="archive" name="PythonCompiler.jar">
+      <element id="module-output" name="PythonCompiler" />
+    </root>
+  </artifact>
+</component>
