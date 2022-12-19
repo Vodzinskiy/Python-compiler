@@ -1,5 +1,7 @@
 package io.coursework.parser;
 
-public interface Contents {
-    public String toString(int l);
+public abstract class Contents {
+    public String toString(int l) {
+        return null;
+    }
 }

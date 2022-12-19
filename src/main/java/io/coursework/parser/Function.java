@@ -2,12 +2,11 @@ package io.coursework.parser;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class Function implements Contents {
-    private String name;
-    private ArrayList<Variable> args;
-    private ArrayList<Contents> body;
+public class Function extends Contents {
+    private final String name;
+    private final ArrayList<Variable> args;
+    private final ArrayList<Contents> body;
 
 
     public Function(String name, ArrayList<Variable> args, ArrayList<Contents> body) {
@@ -36,7 +35,7 @@ public class Function implements Contents {
             StringBuilder str = new StringBuilder();
             for (Variable a : args) {
                 str.append("\t".repeat(l + 2)).append("Argument:\n");
-                str.append("\t".repeat(l + 3)).append("name: ").append(a.getName()).append("\n");
+                str.append("\t".repeat(l + 3)).append("name: ").append(a).append("\n");
             }
             return String.valueOf(str);
         }

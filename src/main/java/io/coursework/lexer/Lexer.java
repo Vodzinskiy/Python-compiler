@@ -1,6 +1,7 @@
 package io.coursework.lexer;
 
 
+import io.coursework.Data;
 import io.coursework.parser.Parser;
 
 import java.io.FileWriter;
@@ -10,20 +11,12 @@ import java.util.Arrays;
 
 public class Lexer {
     private final String code;
-    private boolean errors = false;
     private final ArrayList<Token> tokenList = new ArrayList<>();
     private final ArrayList<String> lexemes = new ArrayList<>();
     private final ArrayList<Position> positions = new ArrayList<>();
 
     private String[] sentences;
 
-    private final String[] cycleoperators = {"for", "while"};
-    private final String[] operators = {"+", "-", "%", "*"};
-    private final String[] assignement = {"=", "+=", "-=", "=-", "=+"};
-    private final String[] bool = {"True", "False"};
-    private final String[] logical = {"and", "or"};
-    private final String[] compares = {"<", ">", "==", "!=", "<=", ">="};
-    private final String[] separator = {",", "\n", "\t", "(", ")", ":"};
 
     public Lexer(String code) {
         this.code = code;
@@ -50,24 +43,21 @@ public class Lexer {
                 case "\t" -> tokenList.add(new Token("TAB", lexemes.get(i), positions.get(i)));
                 case "\n" -> tokenList.add(new Token("NEW_LINE", lexemes.get(i), positions.get(i)));
                 default -> {
-                    if (Arrays.asList(assignement).contains(lexemes.get(i))) {
+                    if (Arrays.asList(Data.assignement).contains(lexemes.get(i))) {
                         tokenList.add(new Token("ASSIGNMENT", lexemes.get(i), positions.get(i)));
-                    } else if (Arrays.asList(cycleoperators).contains(lexemes.get(i))) {
+                    } else if (Arrays.asList(Data.cycleoperators).contains(lexemes.get(i))) {
                         tokenList.add(new Token("CYCLE", lexemes.get(i), positions.get(i)));
-                    } else if (Arrays.asList(bool).contains(lexemes.get(i))) {
+                    } else if (Arrays.asList(Data.bool).contains(lexemes.get(i))) {
                         tokenList.add(new Token("BOOLEAN", lexemes.get(i), positions.get(i)));
-                    } else if (Arrays.asList(operators).contains(lexemes.get(i))) {
+                    } else if (Arrays.asList(Data.operators).contains(lexemes.get(i))) {
                         tokenList.add(new Token("OPERATORS", lexemes.get(i), positions.get(i)));
-                    } else if (Arrays.asList(compares).contains(lexemes.get(i))) {
+                    } else if (Arrays.asList(Data.compares).contains(lexemes.get(i))) {
                         tokenList.add(new Token("COMPARATORS", lexemes.get(i), positions.get(i)));
-                    } else if (Arrays.asList(logical).contains(lexemes.get(i))) {
-                        tokenList.add(new Token("LOGIC", lexemes.get(i), positions.get(i)));
                     } else if (isNumber(lexemes.get(i))) {
                         tokenList.add(new Token("NUMBER", lexemes.get(i), positions.get(i)));
                     } else if (isName(lexemes.get(i))) {
                         tokenList.add(new Token("IDENTIFIER", lexemes.get(i), positions.get(i)));
                     } else {
-                        errors = true;
                         System.out.println("\nline " + positions.get(i).getLine());
                         System.out.println(sentences[positions.get(i).getLine()-1]);
                         System.out.println(" ".repeat(positions.get(i).getSymbol()-1) + "^".repeat(lexemes.get(i).length()));
@@ -77,6 +67,7 @@ public class Lexer {
                 }
             }
         }
+        writeToFile();
         Parser parser = new Parser(tokenList, code);
         parser.start();
     }
@@ -97,6 +88,7 @@ public class Lexer {
         boolean comment = false;
         int lineCount = 1;
         int symbolCount = 1;
+
         for (char c : charArray) {
             if (c == '#') {
                 comment = true;
@@ -120,7 +112,7 @@ public class Lexer {
                 if (c == '\r') {
                     continue;
                 }
-                if (Arrays.asList(separator).contains(String.valueOf(c))) {
+                if (Arrays.asList(Data.separator).contains(String.valueOf(c))) {
                     if (!tempLexeme.toString().equals("")) {
                         lexemes.add(tempLexeme.toString());
                         positions.add(new Position(lineCount, symbolCount - tempLexeme.length()));
@@ -175,17 +167,15 @@ public class Lexer {
      * writing a list of tokens to a file
      */
     public void writeToFile() {
-        if (!errors) {
-            try (FileWriter file = new FileWriter("TokenList.txt")) {
-                for (Token token : tokenList) {
-                    file.write(String.format("%-20s <- %-20s %s", token.getValue()
-                            .replaceAll("\n", "\\\\n")
-                            .replaceAll("\t", "\\\\t"), token.getName(),"on " + token.getPosition()) + "\n");
+        try (FileWriter file = new FileWriter("TokenList.txt")) {
+            for (Token token : tokenList) {
+                file.write(String.format("%-20s <- %-20s %s", token.getValue()
+                        .replaceAll("\n", "\\\\n")
+                        .replaceAll("\t", "\\\\t"), token.getName(),"on " + token.getPosition()) + "\n");
 
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

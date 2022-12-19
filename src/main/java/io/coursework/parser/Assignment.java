@@ -1,12 +1,14 @@
 package io.coursework.parser;
 
-public class Assignment implements Contents {
-    private final Variable variable;
-    private final int constant;
+import io.coursework.parser.expression.Expression;
 
-    public Assignment(Variable variable, int constant) {
+public class Assignment extends Contents {
+    private final Variable variable;
+    private final Expression expression;
+
+    public Assignment(Variable variable, Expression expression) {
         this.variable = variable;
-        this.constant = constant;
+        this.expression = expression;
     }
 
 
@@ -14,8 +16,8 @@ public class Assignment implements Contents {
         return variable;
     }
 
-    public int getConstant() {
-        return constant;
+    public Expression getExpression() {
+        return expression;
     }
 
 
@@ -23,6 +25,6 @@ public class Assignment implements Contents {
     public String toString(int l) {
         return "\t".repeat(l) + "Assignment:\n" +
                 "\t".repeat(l + 1) + "Variable: " + variable.getName() + "\n" +
-                "\t".repeat(l + 1) + "Expression: " + constant;
+                "\t".repeat(l + 1) + "Expression: " + expression + "\n";
     }
 }

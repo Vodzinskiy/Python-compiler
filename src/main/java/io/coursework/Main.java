@@ -22,6 +22,5 @@ public class Main {
 
         Lexer lexer = new Lexer(source.replaceAll(" {4}", "\t"));
         lexer.start();
-        lexer.writeToFile();
     }
 }
