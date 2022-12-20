@@ -6,7 +6,7 @@ import io.coursework.parser.expression.Expression;
 import java.util.ArrayList;
 
 public class If extends Contents{
-    private BoolExpression bool = null;
+    private Expression bool = null;
     private Expression a;
     private Expression b;
     private String compares;
@@ -19,12 +19,12 @@ public class If extends Contents{
         this.body = body;
     }
 
-    public If(BoolExpression bool, ArrayList<Contents> body) {
+    public If(Expression bool, ArrayList<Contents> body) {
         this.bool = bool;
         this.body = body;
     }
 
-    public BoolExpression getBool() {
+    public Expression getBool() {
         return bool;
     }
 

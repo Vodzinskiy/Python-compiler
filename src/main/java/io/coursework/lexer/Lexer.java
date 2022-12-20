@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Lexer {
     private final String code;
@@ -140,6 +141,18 @@ public class Lexer {
                     symbolCount += 4;
                 } else {
                     symbolCount += 1;
+                }
+            }
+            else {
+                if (lexemes.size()>0) {
+                    while (!Objects.equals(lexemes.get(lexemes.size() - 1), "\n")) {
+                        if (!Objects.equals(lexemes.get(lexemes.size() - 1), "\t")) {
+                            break;
+                        }
+                        lexemes.remove(lexemes.size()-1);
+                        positions.remove(lexemes.size()-1);
+                        symbolCount -= 4;
+                    }
                 }
             }
         }

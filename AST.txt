@@ -1,0 +1,10 @@
+Program:
+	Assignment:
+		Variable: n
+		Expression: 4
+	Assignment:
+		Variable: r
+		Expression: 0
+	Assignment:
+		Variable: r
+		Expression: n [INTEGER] + 4

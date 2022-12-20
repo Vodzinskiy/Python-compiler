@@ -1,19 +1,19 @@
 package io.coursework.parser;
 
 public class Return extends Contents {
-    private final Variable variable;
+    private final Exception exception;
 
-    public Return(Variable variable) {
-        this.variable = variable;
+    public Return(Exception exception) {
+        this.exception = exception;
     }
 
-    public Variable getVariable() {
-        return variable;
+    public Exception getException() {
+        return exception;
     }
 
     @Override
     public String toString(int l) {
         return "\t".repeat(l) + "Return:\n" +
-                "\t".repeat(l + 1) + "Variable: " + variable.getName() + "\n";
+                "\t".repeat(l + 1) + "Variable: " + exception + "\n";
     }
 }
