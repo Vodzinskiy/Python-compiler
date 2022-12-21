@@ -12,6 +12,11 @@ public class NumberExpression extends Expression {
     }
 
     @Override
+    public String getType(){
+        return "INTEGER";
+    }
+
+    @Override
     public String toString() {
         return String.valueOf(num);
     }

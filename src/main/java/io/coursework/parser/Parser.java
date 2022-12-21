@@ -492,11 +492,15 @@ public class Parser {
 
     private void argsNumberCheck(int k, ArrayList<Token> sentence, ArrayList<Expression> args) {
         Function f = functionFind(functions, sentence.get(k).getValue());
+        assert f != null;
         if (args.size() < f.getArgs().size()) {
             errorMassage(sentence.get(k), "Error: missing " + (f.getArgs().size() - args.size()) + " required positional argument");
         }
         if (args.size() > f.getArgs().size()) {
             errorMassage(sentence.get(k), "Error: takes " + f.getArgs().size() + " positional arguments but " + args.size() + " were given");
+        }
+        for (int i = 0; i < args.size(); i++) {
+            f.getArgs().get(i).setType(args.get(i).getType());
         }
     }
 

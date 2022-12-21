@@ -9,8 +9,8 @@ Program:
 				Expression: 0
 			For:
 				Range:
-					Start: m [null]
-					End: n [null] + 1
+					Start: m [INTEGER]
+					End: n [INTEGER] + 1
 				Body:
 					Assignment:
 						Variable: prime_number
@@ -32,7 +32,10 @@ Program:
 										Expression: false
 					If:
 						Condition:
-							Boolean variable: prime_number [BOOLEAN]
+							Comparison: 
+								Sign: ==
+								Left operand: prime_number [BOOLEAN]
+								Right operand: 1
 						Body:
 							If:
 								Condition:
@@ -49,15 +52,15 @@ Program:
 	Function main:
 		Args:
 		Body:
-			Call sum_prime_numbers :
-				Args: 
-					argument: 2
-					argument: 20
-
 			Return:
 				Call sum_prime_numbers :
 					Args: 
 						argument: 2
 						argument: 20
+
+
+	Return:
+		Call main :
+			Args: 
 
 

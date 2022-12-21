@@ -14,6 +14,11 @@ public class VariableExpression extends Expression {
     }
 
     @Override
+    public String getType(){
+        return variable.getType();
+    }
+
+    @Override
     public String toString() {
         return  variable.toString() + " [" + variable.getType() + "]";
     }

@@ -12,6 +12,10 @@ public class BoolExpression extends Expression {
     }
 
     @Override
+    public String getType(){
+        return "BOOLEAN";
+    }
+    @Override
     public String toString() {
         return String.valueOf(flag);
     }

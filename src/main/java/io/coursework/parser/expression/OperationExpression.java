@@ -24,6 +24,11 @@ public class OperationExpression extends Expression {
     }
 
     @Override
+    public String getType(){
+        return "INTEGER";
+    }
+
+    @Override
     public String toString() {
         return a + " " + operator + " " + b;
     }
