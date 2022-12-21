@@ -34,8 +34,7 @@ public class Function extends Contents {
         } else {
             StringBuilder str = new StringBuilder();
             for (Variable a : args) {
-                str.append("\t".repeat(l + 2)).append("Argument:\n");
-                str.append("\t".repeat(l + 3)).append("name: ").append(a).append("\n");
+                str.append("\t".repeat(l + 2)).append("Name: ").append(a).append("\n");
             }
             return String.valueOf(str);
         }

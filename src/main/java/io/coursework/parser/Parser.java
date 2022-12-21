@@ -15,6 +15,7 @@ public class Parser {
     private final String code;
     private final ArrayList<ArrayList<Token>> sentences = new ArrayList<>();
     private String[] stringSentences;
+    ArrayList<Function> functions = new ArrayList<>();
 
     private final Program program = new Program();
     int i = 0;
@@ -49,10 +50,12 @@ public class Parser {
             }
             variables.addAll(args);
             ArrayList<Contents> body = getBody(k, variables);
-            c = new Function(sentence.get(k + 1).getValue(), args, body);
+            Function f = new Function(sentence.get(k + 1).getValue(), args, body);
+            functions.add(f);
+            c = f;
         } else if (Objects.equals(sentence.get(k).getValue(), "for")) {
             forCheck(sentence, k);
-            variables.add(new Variable(sentence.get(k + 1).getValue()));
+            variables.add(new Variable(sentence.get(k + 1).getValue(), "INTEGER"));
             ArrayList<Contents> body = getBody(k, variables);
 
             Expression start = new NumberExpression(0);
@@ -110,6 +113,16 @@ public class Parser {
                 }
                 c = new If(a, b, compares, body);
             }
+        } else if (Objects.equals(sentence.get(k).getName(), "IDENTIFIER") &&
+                Objects.equals(sentence.get(k + 1).getName(), "OPEN_PARENTHESES")) {
+            callCheck(sentence, k);
+            if (functionFind(functions, sentence.get(k).getValue()) == null) {
+                errorMassage(sentence.get(k), "Error: unknown function");
+            }
+            ArrayList<Expression> args = functionCall(k + 2, sentence, variables);
+            argsNumberCheck(k, sentence, args);
+            c = new Call(sentence.get(k).getValue(), args);
+
         } else if (Objects.equals(sentence.get(k).getName(), "IDENTIFIER")) {
             assignmentCheck(sentence, k);
             if (Objects.equals(sentence.get(k + 1).getValue(), "=") && sentence.size() == k + 3) {
@@ -193,14 +206,43 @@ public class Parser {
                     c = new Assignment(v, new OperationExpression(operator, a, b));
                 }
             }
-
-
         } else if (Objects.equals(sentence.get(k).getName(), "RETURN")) {
             returnCheck(sentence, k);
-            //c = new Return();
+            if (sentence.size() == k + 2) {
+                Expression e;
+                if (Objects.equals(sentence.get(k + 1).getName(), "IDENTIFIER")) {
+                    if (variableFind(variables, sentence.get(k + 1).getValue()) == null) {
+                        errorMassage(sentence.get(k + 1), "Error: unknown variable");
+                    }
+                    e = new VariableExpression(variableFind(variables, sentence.get(k + 1).getValue()));
+                } else if (Objects.equals(sentence.get(k + 1).getName(), "BOOLEAN")) {
+                    e = new BoolExpression(Boolean.parseBoolean(sentence.get(k + 1).getValue()));
+                } else {
+                    e = new NumberExpression(Integer.parseInt(sentence.get(k + 1).getValue()));
+                }
+                c = new Return(e);
+            } else {
+                ArrayList<Expression> args = functionCall(k + 3, sentence, variables);
+                argsNumberCheck(k + 1, sentence, args);
+                c = new Return(new Call(sentence.get(k + 1).getValue(), args));
+            }
         } else if (Objects.equals(sentence.get(k).getName(), "PRINT")) {
             printCheck(sentence, k);
-            c = new Print("11");
+            if (sentence.size() == k + 4) {
+                if (Objects.equals(sentence.get(k + 2).getName(), "IDENTIFIER")) {
+                    if (variableFind(variables, sentence.get(k + 2).getValue()) == null) {
+                        errorMassage(sentence.get(k + 2), "Error: unknown variable");
+                    }
+                    c = new Print(variableFind(variables, sentence.get(k + 2).getValue()));
+                } else {
+                    c = new Print(sentence.get(k + 2).getValue());
+                }
+            } else {
+                ArrayList<Expression> args = functionCall(k + 4, sentence, variables);
+                argsNumberCheck(k + 2, sentence, args);
+                c = new Return(new Call(sentence.get(k + 2).getValue(), args));
+            }
+
         } else {
             errorMassage(sentence.get(k), "SyntaxError: invalid syntax");
         }
@@ -208,9 +250,9 @@ public class Parser {
     }
 
     private void functionCheck(ArrayList<Token> tokens) {
+        positionCheck(tokens, tokens.size() - 1, "COLON");
         positionCheck(tokens, 1, "IDENTIFIER");
         positionCheck(tokens, 2, "OPEN_PARENTHESES");
-        positionCheck(tokens, tokens.size() - 1, "COLON");
         positionCheck(tokens, tokens.size() - 2, "CLOSE_PARENTHESES");
         for (int i = 3; i < tokens.size() - 2; i++) {
             if (!Objects.equals(tokens.get(i).getName(), "IDENTIFIER") && i % 2 == 1) {
@@ -223,11 +265,11 @@ public class Parser {
     }
 
     private void forCheck(ArrayList<Token> tokens, int k) {
+        positionCheck(tokens, tokens.size() - 1, "COLON");
         positionCheck(tokens, k + 1, "IDENTIFIER");
         positionCheck(tokens, k + 2, "IN");
         positionCheck(tokens, k + 3, "RANGE");
         positionCheck(tokens, k + 4, "OPEN_PARENTHESES");
-        positionCheck(tokens, tokens.size() - 1, "COLON");
         positionCheck(tokens, tokens.size() - 2, "CLOSE_PARENTHESES");
         if (tokens.size() < k + 8) {
             errorMassage(tokens.get(tokens.size() - 3), "Error: empty range");
@@ -288,6 +330,22 @@ public class Parser {
         }
     }
 
+    private void callCheck(ArrayList<Token> tokens, int k) {
+        positionCheck(tokens, tokens.size() - 1, "CLOSE_PARENTHESES");
+
+        for (int i = k + 2; i < tokens.size() - 1; i++) {
+            if (!Objects.equals(tokens.get(i).getName(), "IDENTIFIER") &&
+                    !Objects.equals(tokens.get(i).getName(), "NUMBER") &&
+                    !Objects.equals(tokens.get(i).getName(), "BOOLEAN") && i - k % 2 == 0) {
+                errorMassage(tokens.get(i), "SyntaxError: invalid syntax");
+            }
+            if (!Objects.equals(tokens.get(i).getValue(), ",") && i - k % 2 == 1) {
+                errorMassage(tokens.get(i), "SyntaxError: invalid syntax");
+            }
+        }
+
+    }
+
     private void assignmentCheck(ArrayList<Token> tokens, int k) {
         if (tokens.size() < k + 3) {
             errorMassage(tokens.get(k + 1), "SyntaxError: invalid syntax");
@@ -318,26 +376,35 @@ public class Parser {
     }
 
     private void returnCheck(ArrayList<Token> tokens, int k) {
-        if (tokens.size() != k + 2) {
-            errorMassage(tokens.get(k + 2), "SyntaxError: invalid syntax");
+        if (tokens.size() == k + 1) {
+            errorMassage(tokens.get(k), "SyntaxError: invalid syntax");
         }
-        if (!Objects.equals(tokens.get(k + 1).getName(), "IDENTIFIER") &&
-                !Objects.equals(tokens.get(k + 2).getName(), "BOOLEAN") &&
-                !Objects.equals(tokens.get(k + 2).getName(), "IDENTIFIER") ) {
-            errorMassage(tokens.get(k + 1), "SyntaxError: invalid syntax");
+        if (tokens.size() == k + 2) {
+            if (!Objects.equals(tokens.get(k + 1).getName(), "IDENTIFIER") &&
+                    !Objects.equals(tokens.get(k + 1).getName(), "BOOLEAN") &&
+                    !Objects.equals(tokens.get(k + 1).getName(), "NUMBER")) {
+                errorMassage(tokens.get(k + 1), "SyntaxError: invalid syntax");
+            }
+        } else {
+
+            ArrayList<Token> t = new ArrayList<>(tokens.subList(k + 3, tokens.size()));
+            callCheck(t, k);
         }
+
     }
 
     private void printCheck(ArrayList<Token> tokens, int k) {
-        if (tokens.size() > k + 4) {
-            errorMassage(tokens.get(k + 5), "SyntaxError: invalid syntax");
-        }
+        positionCheck(tokens, tokens.size() - 1, "CLOSE_PARENTHESES");
         positionCheck(tokens, k + 1, "OPEN_PARENTHESES");
-        if (!Objects.equals(tokens.get(k + 2).getName(), "IDENTIFIER") && !Objects.equals(tokens.get(k + 2).getName(), "NUMBER")) {
-            errorMassage(tokens.get(k + 2), "SyntaxError: invalid parameter to print");
+        if (tokens.size() == k + 4) {
+            if (!Objects.equals(tokens.get(k + 2).getName(), "IDENTIFIER") &&
+                    !Objects.equals(tokens.get(k + 2).getName(), "NUMBER")) {
+                errorMassage(tokens.get(k + 2), "SyntaxError: invalid parameter to print");
+            }
+        } else {
+            ArrayList<Token> t = new ArrayList<>(tokens.subList(k + 2, tokens.size() - 1));
+            callCheck(t, k);
         }
-        positionCheck(tokens, k + 3, "CLOSE_PARENTHESES");
-
     }
 
     private void errorMassage(Token token, String text) {
@@ -379,6 +446,15 @@ public class Parser {
         return null;
     }
 
+    private Function functionFind(ArrayList<Function> functions, String name) {
+        for (int i = functions.size() - 1; i >= 0; i--) {
+            if (Objects.equals(functions.get(i).getName(), name)) {
+                return functions.get(i);
+            }
+        }
+        return null;
+    }
+
     private Expression argsCheck(ArrayList<Token> sentence, int l, ArrayList<Variable> variables) {
         Expression e;
         if (Objects.equals(sentence.get(l).getName(), "NUMBER")) {
@@ -412,6 +488,38 @@ public class Parser {
         if (!Objects.equals(tokens.get(l).getName(), text)) {
             errorMassage(tokens.get(l), "SyntaxError: invalid syntax");
         }
+    }
+
+    private void argsNumberCheck(int k, ArrayList<Token> sentence, ArrayList<Expression> args) {
+        Function f = functionFind(functions, sentence.get(k).getValue());
+        if (args.size() < f.getArgs().size()) {
+            errorMassage(sentence.get(k), "Error: missing " + (f.getArgs().size() - args.size()) + " required positional argument");
+        }
+        if (args.size() > f.getArgs().size()) {
+            errorMassage(sentence.get(k), "Error: takes " + f.getArgs().size() + " positional arguments but " + args.size() + " were given");
+        }
+    }
+
+    private ArrayList<Expression> functionCall(int l, ArrayList<Token> sentence, ArrayList<Variable> variables) {
+        int j = l;
+        ArrayList<Expression> args = new ArrayList<>();
+
+        while (!Objects.equals(sentence.get(j).getValue(), ")")) {
+            if (!Objects.equals(sentence.get(j).getValue(), ",")) {
+                if (Objects.equals(sentence.get(j).getName(), "IDENTIFIER")) {
+                    if (variableFind(variables, sentence.get(j).getValue()) == null) {
+                        errorMassage(sentence.get(j), "Error: unknown variable");
+                    }
+                    args.add(new VariableExpression(variableFind(variables, sentence.get(j).getValue())));
+                } else if (Objects.equals(sentence.get(j).getName(), "NUMBER")) {
+                    args.add(new NumberExpression(Integer.parseInt(sentence.get(j).getValue())));
+                } else {
+                    args.add(new BoolExpression(Boolean.parseBoolean(sentence.get(j).getValue())));
+                }
+            }
+            j++;
+        }
+        return args;
     }
 
     public void writeToFile() {

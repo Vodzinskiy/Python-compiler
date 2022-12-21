@@ -1,8 +1,13 @@
 package io.coursework.parser;
 
 public class Print extends Contents {
-    private String text;
+    private String text = null;
     private Variable variable = null;
+    private Call call = null;
+
+    public Print(Call call) {
+        this.call = call;
+    }
 
     public Print(Variable variable) {
         this.variable = variable;
@@ -20,16 +25,25 @@ public class Print extends Contents {
         return variable;
     }
 
+    public Call getCall() {
+        return call;
+    }
+
     @Override
     public String toString(int l) {
-        if (variable == null) {
+        if (variable != null) {
             return "\t".repeat(l) + "Print:\n" +
                     "\t".repeat(l + 1) + "Expression:\n" +
-                    "\t".repeat(l + 2) + "Value: \"" + text + "\"\n";
+                    "\t".repeat(l + 2) + "Variable: \"" + variable.getName() + "\"\n";
+        }
+        if (call != null) {
+            return "\t".repeat(l) + "Print:\n" +
+                    "\t".repeat(l + 1) + "Expression:\n" +
+                    "\t".repeat(l + 2) + "Function Call: " + call.getName() + "\n";
         } else {
             return "\t".repeat(l) + "Print:\n" +
                     "\t".repeat(l + 1) + "Expression:\n" +
-                    "\t".repeat(l + 2) + "Variable: " + text + "\n";
+                    "\t".repeat(l + 2) + "Value: " + text + "\n";
         }
     }
 }

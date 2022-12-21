@@ -1,19 +1,35 @@
 package io.coursework.parser;
 
-public class Return extends Contents {
-    private final Exception exception;
+import io.coursework.parser.expression.Expression;
 
-    public Return(Exception exception) {
-        this.exception = exception;
+public class Return extends Contents {
+    private Expression expression;
+    private Call call = null;
+
+    public Return(Expression expression) {
+        this.expression = expression;
     }
 
-    public Exception getException() {
-        return exception;
+    public Return(Call call) {
+        this.call = call;
+    }
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public Call getCall() {
+        return call;
     }
 
     @Override
     public String toString(int l) {
-        return "\t".repeat(l) + "Return:\n" +
-                "\t".repeat(l + 1) + "Variable: " + exception + "\n";
+        if (call == null) {
+            return "\t".repeat(l) + "Return:\n" +
+                    "\t".repeat(l + 1) + "Value: " + expression + "\n";
+        } else {
+            return "\t".repeat(l) + "Return:\n" +
+                    call.toString(l + 1) + "\n";
+        }
     }
 }
