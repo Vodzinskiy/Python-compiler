@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class Generator {
     private final Program program;
@@ -14,6 +15,7 @@ public class Generator {
     StringBuilder asm = new StringBuilder();
 
     ArrayList<String> variablesName = new ArrayList<>();
+    private int loopCount = 0;
 
     public Generator(Program program) {
         this.program = program;
@@ -44,7 +46,7 @@ public class Generator {
                 contents.add(c);
             }
         }
-        bodyCreate(contents, 1);
+        bodyCreate(contents);
 
         asm.append("end start\n");
         createAsmFile();
@@ -63,7 +65,7 @@ public class Generator {
                 }
                 asm.append("\n");
                 variableCreate(((Function) c).getBody());
-                bodyCreate(((Function) c).getBody(), 1);
+                bodyCreate(((Function) c).getBody());
                 asm.append("\t".repeat(1)).append("ret\n");
                 asm.append(((Function) c).getName()).append(" endp\n\n");
             }
@@ -94,32 +96,31 @@ public class Generator {
             if (c.getClass() == Assignment.class && !variablesName.contains(((Assignment) c).getVariable().getName())) {
                 asm.append("\t").append("local ").append(((Assignment) c).getVariable().getName()).append(": dword\n");
                 variablesName.add(((Assignment) c).getVariable().getName());
+            } else if (c.getClass() == For.class) {
+                asm.append("\t").append("local ").append(((For) c).getI().getName()).append(": dword\n");
+                variableCreate(((For) c).getBody());
+            } else if (c.getClass() == If.class) {
+                variableCreate(((If) c).getBody());
             }
         }
     }
 
-    private void bodyCreate(ArrayList<Contents> contents, int k) {
+    private void bodyCreate(ArrayList<Contents> contents) {
         for (Contents c : contents) {
             if (c.getClass() == Assignment.class) {
                 if (((Assignment) c).getExpression().getClass() != OperationExpression.class) {
                     if (((Assignment) c).getExpression().getClass() == NumberExpression.class) {
-                        asm.append("\t".repeat(k)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
+                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
                                 .append(((NumberExpression) (((Assignment) c).getExpression())).getNum()).append("\n");
                     } else if (((Assignment) c).getExpression().getClass() == BoolExpression.class) {
-                        asm.append("\t".repeat(k)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", \"")
+                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", \"")
                                 .append(((BoolExpression) (((Assignment) c).getExpression())).getFlag()).append("\"\n");
                     } else {
-                        asm.append("\t".repeat(k)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
+                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
                                 .append(((VariableExpression) (((Assignment) c).getExpression())).getVariable().getName()).append("\n");
                     }
                 } else {
-                    switch (((OperationExpression) ((Assignment) c).getExpression()).getOperator()){
-                        case ("+") -> operation("add", ((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName(), k);
-                        case ("-") -> operation("sub", ((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName(), k);
-                        case ("*") -> operation("mul", ((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName(), k);
-                        case ("/") -> operation("div", ((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName(), k);
-                        case ("%") -> operation("rem", ((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName(), k);
-                    }
+                    mathOperation(((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName());
                 }
             } else if (c.getClass() == Print.class) {
                 String temp = "";
@@ -129,35 +130,75 @@ public class Generator {
                     temp = ((Print) c).getVariable().getName();
                 } else {
                     ArrayList<Expression> args = ((Print) c).getCall().getArgs();
-                    for (int i = args.size()-1; i >= 0; i--) {
-                        asm.append("\t".repeat(k)).append("push ").append(args.get(i)).append("\n");
+                    for (int i = args.size() - 1; i >= 0; i--) {
+                        asm.append("\t".repeat(1)).append("push ").append(args.get(i)).append("\n");
                     }
-                    asm.append("\t".repeat(k)).append("call ").append(((Print) c).getCall().getName()).append("\n");
+                    asm.append("\t".repeat(1)).append("call ").append(((Print) c).getCall().getName()).append("\n");
                     temp = "eax";
                 }
-                asm.append("\t".repeat(k)).append("fn MessageBox, 0, str$(").append(temp).append("),\"КР-02-Java-IO-04-Vodzinskiy\",MB_OK\n");
+                asm.append("\t".repeat(1)).append("fn MessageBox, 0, str$(").append(temp).append("),\"КР-02-Java-IO-04-Vodzinskiy\",MB_OK\n");
 
             } else if (c.getClass() == Return.class) {
                 if (((Return) c).getExpression() != null) {
-                    asm.append("\t".repeat(k)).append("mov eax, ").append(((Return) c).getExpression().getValue()).append("\n");
+                    asm.append("\t".repeat(1)).append("mov eax, ").append(((Return) c).getExpression().getValue()).append("\n");
                 } else {
                     ArrayList<Expression> args = ((Return) c).getCall().getArgs();
-                    for (int i = args.size()-1; i >= 0; i--) {
-                        asm.append("\t".repeat(k)).append("push ").append(args.get(i)).append("\n");
+                    for (int i = args.size() - 1; i >= 0; i--) {
+                        asm.append("\t".repeat(1)).append("push ").append(args.get(i)).append("\n");
                     }
-                    asm.append("\t".repeat(k)).append("call ").append(((Return) c).getCall().getName()).append("\n");
+                    asm.append("\t".repeat(1)).append("call ").append(((Return) c).getCall().getName()).append("\n");
                 }
             } else if (c.getClass() == Call.class) {
                 ArrayList<Expression> args = ((Call) c).getArgs();
-                for (int i = args.size()-1; i >= 0; i--) {
-                    asm.append("\t".repeat(k)).append("push ").append(args.get(i)).append("\n");
+                for (int i = args.size() - 1; i >= 0; i--) {
+                    asm.append("\t".repeat(1)).append("push ").append(args.get(i)).append("\n");
                 }
-                asm.append("\t".repeat(k)).append("call ").append(((Call) c).getName()).append("\n");
+                asm.append("\t".repeat(1)).append("call ").append(((Call) c).getName()).append("\n");
+            } else if (c.getClass() == For.class) {
+                String start;
+                String end;
+                if (((For) c).getStart().getClass() == OperationExpression.class) {
+                    mathOperation(((OperationExpression) ((For) c).getStart()), ((OperationExpression) ((For) c).getStart()).getA().getValue());
+                    start = ((OperationExpression) ((For) c).getStart()).getA().getValue();
+                } else {
+                    start = ((For) c).getStart().getValue();
+                }
+                if (((For) c).getEnd().getClass() == OperationExpression.class) {
+                    mathOperation(((OperationExpression) ((For) c).getEnd()), ((OperationExpression) ((For) c).getEnd()).getA().getValue());
+                    end = ((OperationExpression) ((For) c).getEnd()).getA().getValue();
+                } else {
+                    end = ((For) c).getEnd().getValue();
+                }
+                asm.append("\t".repeat(1)).append(String.format("mov %s, %s\n", ((For) c).getI().getName(), start));
+                loopCount++;
+                String name = "loop" + loopCount;
+                asm.append("\t".repeat(1)).append(name).append(":\n");
+                if (!Pattern.matches("[0-9]*", end)) {
+                    asm.append("\t".repeat(1)).append("mov ecx, ").append(end).append("\n");
+                    asm.append("\t".repeat(1)).append(String.format("cmp %s, ecx\n", ((For) c).getI().getName()));
+                } else {
+                    asm.append("\t".repeat(1)).append(String.format("cmp %s, %s\n", ((For) c).getI().getName(), end));
+                }
+                asm.append("\t".repeat(1)).append(String.format("je %s_end\n", name));
+                bodyCreate(((For) c).getBody());
+                asm.append("\t".repeat(1)).append("inc ").append(((For) c).getI().getName()).append("\n");
+                asm.append("\t".repeat(1)).append("jmp ").append(name).append("\n");
+                asm.append("\t".repeat(1)).append(name).append("_end:\n");
             }
         }
     }
 
-    private void operation(String s, OperationExpression o, String name, int k) {
+    private void mathOperation(OperationExpression o, String name) {
+        switch (o.getOperator()) {
+            case ("+") -> operation("add", o, name);
+            case ("-") -> operation("sub", o, name);
+            case ("*") -> operation("mul", o, name);
+            case ("/") -> operation("div", o, name);
+            case ("%") -> operation("rem", o, name);
+        }
+    }
+
+    private void operation(String s, OperationExpression o, String name) {
 
         boolean f = false;
         try {
@@ -168,47 +209,47 @@ public class Generator {
         }
         if (f) {
             if (Objects.equals(s, "mul")) {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(k)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(k)).append("mul ebx\n");
-                asm.append("\t".repeat(k)).append(String.format("mov %s, eax \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
+                asm.append("\t".repeat(1)).append("mul ebx\n");
+                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
             } else if (Objects.equals(s, "div")) {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(k)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(k)).append("xor edx, edx\n");
-                asm.append("\t".repeat(k)).append("div ebx\n");
-                asm.append("\t".repeat(k)).append(String.format("mov %s, eax \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
+                asm.append("\t".repeat(1)).append("xor edx, edx\n");
+                asm.append("\t".repeat(1)).append("div ebx\n");
+                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
             } else if (Objects.equals(s, "rem")) {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(k)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(k)).append("xor edx, edx\n");
-                asm.append("\t".repeat(k)).append("div ebx\n");
-                asm.append("\t".repeat(k)).append(String.format("mov %s, edx \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
+                asm.append("\t".repeat(1)).append("xor edx, edx\n");
+                asm.append("\t".repeat(1)).append("div ebx\n");
+                asm.append("\t".repeat(1)).append(String.format("mov %s, edx \n", name));
             } else {
-                asm.append("\t".repeat(k)).append(String.format("%s %s, %s \n", s, name, o.getB().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("%s %s, %s \n", s, name, o.getB().getValue()));
             }
         } else {
             if (Objects.equals(s, "mul")) {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(k)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(k)).append("mul ebx\n");
-                asm.append("\t".repeat(k)).append(String.format("mov %s, eax \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
+                asm.append("\t".repeat(1)).append("mul ebx\n");
+                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
             } else if (Objects.equals(s, "div")) {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(k)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(k)).append("xor edx, edx\n");
-                asm.append("\t".repeat(k)).append("div ebx\n");
-                asm.append("\t".repeat(k)).append(String.format("mov %s, eax \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
+                asm.append("\t".repeat(1)).append("xor edx, edx\n");
+                asm.append("\t".repeat(1)).append("div ebx\n");
+                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
             } else if (Objects.equals(s, "rem")) {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(k)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(k)).append("xor edx, edx\n");
-                asm.append("\t".repeat(k)).append("div ebx\n");
-                asm.append("\t".repeat(k)).append(String.format("mov %s, edx \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
+                asm.append("\t".repeat(1)).append("xor edx, edx\n");
+                asm.append("\t".repeat(1)).append("div ebx\n");
+                asm.append("\t".repeat(1)).append(String.format("mov %s, edx \n", name));
             } else {
-                asm.append("\t".repeat(k)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(k)).append(String.format("%s eax, %s \n", s, o.getB().getValue()));
-                asm.append("\t".repeat(k)).append(String.format("mov %s, eax \n", name));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("%s eax, %s \n", s, o.getB().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
             }
         }
     }

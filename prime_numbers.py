@@ -1,8 +1,6 @@
+def sum_prime_numbers():
+    r = 3
+    for i in range(2, r):
+        print(i)
 
-
-def main():
-    result = 9
-    d = result + 2
-    return d
-
-print(main())
+sum_prime_numbers()

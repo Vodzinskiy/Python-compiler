@@ -1,15 +1,18 @@
 Program:
-	Function main:
+	Function sum_prime_numbers:
 		Args:
 		Body:
 			Assignment:
-				Variable: result
-				Expression: 9
-			Assignment:
-				Variable: d
-				Expression: result [INTEGER] + 2
-			Return:
-				Value: d [INTEGER]
-	Print:
-		Expression:
-			Function Call: main
+				Variable: r
+				Expression: 3
+			For:
+				Range:
+					Start: 2
+					End: r [INTEGER]
+				Body:
+					Print:
+						Expression:
+							Variable: "i"
+	Call sum_prime_numbers :
+		Args: 
+

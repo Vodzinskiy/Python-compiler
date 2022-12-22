@@ -40,6 +40,10 @@ public class If extends Contents{
         return compares;
     }
 
+    public ArrayList<Contents> getBody() {
+        return body;
+    }
+
     private String bodyToString(int l) {
         StringBuilder str = new StringBuilder();
         for (Contents c : body) {
