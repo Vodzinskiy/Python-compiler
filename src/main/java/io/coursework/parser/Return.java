@@ -3,7 +3,7 @@ package io.coursework.parser;
 import io.coursework.parser.expression.Expression;
 
 public class Return extends Contents {
-    private Expression expression;
+    private Expression expression = null;
     private Call call = null;
 
     public Return(Expression expression) {

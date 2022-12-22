@@ -9,6 +9,10 @@ public class Program {
         contents.add(content);
     }
 
+    public ArrayList<Contents> getContents() {
+        return contents;
+    }
+
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder("Program:\n");
