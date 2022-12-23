@@ -1,4 +1,7 @@
 Program:
+	Assignment:
+		Variable: me
+		Expression: 7
 	Function sum_prime_numbers:
 		Args:
 			Name: m
@@ -9,7 +12,7 @@ Program:
 				Expression: 0
 			For:
 				Range:
-					Start: m [INTEGER]
+					Start: me [INTEGER]
 					End: n [INTEGER] + 1
 				Body:
 					Assignment:

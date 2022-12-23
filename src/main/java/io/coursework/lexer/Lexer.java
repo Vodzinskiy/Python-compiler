@@ -2,6 +2,7 @@ package io.coursework.lexer;
 
 
 import io.coursework.Data;
+import io.coursework.Main;
 import io.coursework.parser.Parser;
 
 import java.io.FileWriter;
@@ -63,7 +64,8 @@ public class Lexer {
                         System.out.println(sentences[positions.get(i).getLine()-1]);
                         System.out.println(" ".repeat(positions.get(i).getSymbol()-1) + "^".repeat(lexemes.get(i).length()));
                         System.out.println("Error: invalid name or symbol");
-                        System.exit(1);
+                        System.out.println("\nTry again...\n");
+                        Main.start();
                     }
                 }
             }
@@ -142,7 +144,7 @@ public class Lexer {
      * check whether the string is a number
      */
     public boolean isNumber(String str) {
-        return str.matches("-?\\d+(\\.\\d+)?");
+        return str.matches("\\d+");
     }
 
     /**
@@ -161,7 +163,6 @@ public class Lexer {
                 file.write(String.format("%-20s <- %-20s %s", token.getValue()
                         .replaceAll("\n", "\\\\n")
                         .replaceAll("\t", "\\\\t"), token.getName(),"on " + token.getPosition()) + "\n");
-
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

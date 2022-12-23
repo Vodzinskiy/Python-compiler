@@ -2,13 +2,10 @@
 .model flat, stdcall
 option casemap:none
 
-include     C:\\masm32\include\windows.inc
-include     C:\\masm32\include\kernel32.inc
-include     C:\\masm32\include\user32.inc
-include     C:\\masm32\include\masm32rt.inc
-includelib  C:\\masm32\lib\user32.lib
-includelib  C:\\masm32\lib\kernel32.lib
+include     \masm32\include\masm32rt.inc
 
+.data
+	me dword ?
 
 .code
 sum_prime_numbers proc m:dword, n:dword
@@ -20,7 +17,7 @@ sum_prime_numbers proc m:dword, n:dword
 	mov eax, n 
 	add eax, 1 
 	mov n, eax 
-	mov eax, m
+	mov eax, me
 	mov i, eax
 	loop1:
 	mov ecx, n
@@ -65,6 +62,8 @@ main proc
 main endp
 
 start:
+	mov me, 7
 	call main
 	fn MessageBox, 0, str$(eax),"КР-02-Java-IO-04-Vodzinskiy",MB_OK
+	invoke ExitProcess, 0
 end start

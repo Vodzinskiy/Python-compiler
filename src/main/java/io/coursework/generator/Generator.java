@@ -27,12 +27,7 @@ public class Generator {
                 .model flat, stdcall
                 option casemap:none
                                 
-                include     C:\\\\masm32\\include\\windows.inc
-                include     C:\\\\masm32\\include\\kernel32.inc
-                include     C:\\\\masm32\\include\\user32.inc
-                include     C:\\\\masm32\\include\\masm32rt.inc
-                includelib  C:\\\\masm32\\lib\\user32.lib
-                includelib  C:\\\\masm32\\lib\\kernel32.lib
+                include     \\masm32\\include\\masm32rt.inc
                                 
                 """);
         dataCreate();
@@ -47,7 +42,7 @@ public class Generator {
             }
         }
         bodyCreate(contents);
-
+        asm.append("\tinvoke ExitProcess, 0\n");
         asm.append("end start\n");
         createAsmFile();
     }
@@ -66,7 +61,7 @@ public class Generator {
                 asm.append("\n");
                 variableCreate(((Function) c).getBody());
                 bodyCreate(((Function) c).getBody());
-                asm.append("\t".repeat(1)).append("ret\n");
+                asm.append("\tret\n");
                 asm.append(((Function) c).getName()).append(" endp\n\n");
             }
         }
@@ -94,10 +89,10 @@ public class Generator {
     private void variableCreate(ArrayList<Contents> contents) {
         for (Contents c : contents) {
             if (c.getClass() == Assignment.class && !variablesName.contains(((Assignment) c).getVariable().getName())) {
-                asm.append("\t").append("local ").append(((Assignment) c).getVariable().getName()).append(": dword\n");
+                asm.append("\tlocal ").append(((Assignment) c).getVariable().getName()).append(": dword\n");
                 variablesName.add(((Assignment) c).getVariable().getName());
             } else if (c.getClass() == For.class) {
-                asm.append("\t").append("local ").append(((For) c).getI().getName()).append(": dword\n");
+                asm.append("\tlocal ").append(((For) c).getI().getName()).append(": dword\n");
                 variableCreate(((For) c).getBody());
             } else if (c.getClass() == If.class) {
                 variableCreate(((If) c).getBody());
@@ -110,17 +105,17 @@ public class Generator {
             if (c.getClass() == Assignment.class) {
                 if (((Assignment) c).getExpression().getClass() != OperationExpression.class) {
                     if (((Assignment) c).getExpression().getClass() == NumberExpression.class) {
-                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
+                        asm.append("\tmov ").append(((Assignment) c).getVariable().getName()).append(", ")
                                 .append(((NumberExpression) (((Assignment) c).getExpression())).getNum()).append("\n");
                     } else if (((Assignment) c).getExpression().getClass() == BoolExpression.class) {
                         if (((BoolExpression) (((Assignment) c).getExpression())).getFlag()) {
-                            asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", 1\n");
+                            asm.append("\tmov ").append(((Assignment) c).getVariable().getName()).append(", 1\n");
                         } else {
-                            asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", 0\n");
+                            asm.append("\tmov ").append(((Assignment) c).getVariable().getName()).append(", 0\n");
                         }
                     } else {
-                        asm.append("\t".repeat(1)).append("mov eax, ").append(((VariableExpression) (((Assignment) c).getExpression())).getVariable().getName()).append("\n");
-                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", eax").append("\n");
+                        asm.append("\tmov eax, ").append(((VariableExpression) (((Assignment) c).getExpression())).getVariable().getName()).append("\n");
+                        asm.append("\tmov ").append(((Assignment) c).getVariable().getName()).append(", eax").append("\n");
                     }
                 } else {
                     mathOperation(((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName());
@@ -134,29 +129,29 @@ public class Generator {
                 } else {
                     ArrayList<Expression> args = ((Print) c).getCall().getArgs();
                     for (int i = args.size() - 1; i >= 0; i--) {
-                        asm.append("\t".repeat(1)).append("push ").append(args.get(i)).append("\n");
+                        asm.append("\tpush ").append(args.get(i)).append("\n");
                     }
-                    asm.append("\t".repeat(1)).append("call ").append(((Print) c).getCall().getName()).append("\n");
+                    asm.append("\tcall ").append(((Print) c).getCall().getName()).append("\n");
                     temp = "eax";
                 }
-                asm.append("\t".repeat(1)).append("fn MessageBox, 0, str$(").append(temp).append("),\"КР-02-Java-IO-04-Vodzinskiy\",MB_OK\n");
+                asm.append("\tfn MessageBox, 0, str$(").append(temp).append("),\"КР-02-Java-IO-04-Vodzinskiy\",MB_OK\n");
 
             } else if (c.getClass() == Return.class) {
                 if (((Return) c).getExpression() != null) {
-                    asm.append("\t".repeat(1)).append("mov eax, ").append(((Return) c).getExpression().getValue()).append("\n");
+                    asm.append("\tmov eax, ").append(((Return) c).getExpression().getValue()).append("\n");
                 } else {
                     ArrayList<Expression> args = ((Return) c).getCall().getArgs();
                     for (int i = args.size() - 1; i >= 0; i--) {
-                        asm.append("\t".repeat(1)).append("push ").append(args.get(i)).append("\n");
+                        asm.append("\tpush ").append(args.get(i)).append("\n");
                     }
-                    asm.append("\t".repeat(1)).append("call ").append(((Return) c).getCall().getName()).append("\n");
+                    asm.append("\tcall ").append(((Return) c).getCall().getName()).append("\n");
                 }
             } else if (c.getClass() == Call.class) {
                 ArrayList<Expression> args = ((Call) c).getArgs();
                 for (int i = args.size() - 1; i >= 0; i--) {
-                    asm.append("\t".repeat(1)).append("push ").append(args.get(i)).append("\n");
+                    asm.append("\tpush ").append(args.get(i)).append("\n");
                 }
-                asm.append("\t".repeat(1)).append("call ").append(((Call) c).getName()).append("\n");
+                asm.append("\tcall ").append(((Call) c).getName()).append("\n");
             } else if (c.getClass() == For.class) {
                 String start;
                 String end;
@@ -173,26 +168,26 @@ public class Generator {
                     end = ((For) c).getEnd().getValue();
                 }
                 if (Pattern.matches("[0-9]*", start)) {
-                    asm.append("\t".repeat(1)).append(String.format("mov %s, %s\n", ((For) c).getI().getName(), start));
+                    asm.append(String.format("\tmov %s, %s\n", ((For) c).getI().getName(), start));
                 } else {
-                    asm.append("\t".repeat(1)).append("mov eax, ").append(start).append("\n");
-                    asm.append("\t".repeat(1)).append("mov ").append(((For) c).getI().getName()).append(", eax").append("\n");
+                    asm.append("\tmov eax, ").append(start).append("\n");
+                    asm.append("\tmov ").append(((For) c).getI().getName()).append(", eax").append("\n");
                 }
 
                 loopCount++;
                 String name = "loop" + loopCount;
-                asm.append("\t".repeat(1)).append(name).append(":\n");
+                asm.append("\t").append(name).append(":\n");
                 if (!Pattern.matches("[0-9]*", end)) {
-                    asm.append("\t".repeat(1)).append("mov ecx, ").append(end).append("\n");
-                    asm.append("\t".repeat(1)).append(String.format("cmp %s, ecx\n", ((For) c).getI().getName()));
+                    asm.append("\tmov ecx, ").append(end).append("\n");
+                    asm.append(String.format("\tcmp %s, ecx\n", ((For) c).getI().getName()));
                 } else {
-                    asm.append("\t".repeat(1)).append(String.format("cmp %s, %s\n", ((For) c).getI().getName(), end));
+                    asm.append(String.format("\tcmp %s, %s\n", ((For) c).getI().getName(), end));
                 }
-                asm.append("\t".repeat(1)).append(String.format("je %s_end\n", name));
+                asm.append(String.format("\tje %s_end\n", name));
                 bodyCreate(((For) c).getBody());
-                asm.append("\t".repeat(1)).append("inc ").append(((For) c).getI().getName()).append("\n");
-                asm.append("\t".repeat(1)).append("jmp ").append(name).append("\n");
-                asm.append("\t".repeat(1)).append(name).append("_end:\n");
+                asm.append("\tinc ").append(((For) c).getI().getName()).append("\n");
+                asm.append("\tjmp ").append(name).append("\n");
+                asm.append("\t").append(name).append("_end:\n");
             } else if (c.getClass() == If.class) {
                 if (((If) c).getBool() == null) {
                     String left;
@@ -210,16 +205,16 @@ public class Generator {
                         right = ((If) c).getB().getValue();
                     }
                     if (!Pattern.matches("[0-9]*", right)) {
-                        asm.append("\t".repeat(1)).append("mov ebx, ").append(right).append("\n");
-                        asm.append("\t".repeat(1)).append(String.format(".if %s %s %s\n",left, ((If) c).getCompares() , "ebx"));
+                        asm.append("\tmov ebx, ").append(right).append("\n");
+                        asm.append(String.format("\t.if %s %s %s\n",left, ((If) c).getCompares() , "ebx"));
                     } else {
-                        asm.append("\t".repeat(1)).append(String.format(".if %s %s %s\n",left, ((If) c).getCompares() , right));
+                        asm.append(String.format("\t.if %s %s %s\n",left, ((If) c).getCompares() , right));
                     }
                 } else {
-                    asm.append("\t".repeat(1)).append(String.format(".if %s == 1\n", ((If) c).getBool().getValue()));
+                    asm.append(String.format("\t.if %s == 1\n", ((If) c).getBool().getValue()));
                 }
                 bodyCreate(((If) c).getBody());
-                asm.append("\t".repeat(1)).append(".endif\n");
+                asm.append("\t.endif\n");
             }
         }
     }
@@ -245,49 +240,49 @@ public class Generator {
         }
         if (f) {
             if (Objects.equals(s, "mul")) {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(1)).append("mul ebx\n");
-                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
+                asm.append(String.format("\tmov eax, %s \n", name));
+                asm.append(String.format("\tmov ebx, %s \n", o.getB().getValue()));
+                asm.append("\tmul ebx\n");
+                asm.append(String.format("\tmov %s, eax \n", name));
             } else if (Objects.equals(s, "div")) {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(1)).append("xor edx, edx\n");
-                asm.append("\t".repeat(1)).append("div ebx\n");
-                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
+                asm.append(String.format("\tmov eax, %s \n", name));
+                asm.append(String.format("\tmov ebx, %s \n", o.getB().getValue()));
+                asm.append("\txor edx, edx\n");
+                asm.append("\tdiv ebx\n");
+                asm.append(String.format("\tmov %s, eax \n", name));
             } else if (Objects.equals(s, "rem")) {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(1)).append("xor edx, edx\n");
-                asm.append("\t".repeat(1)).append("div ebx\n");
-                asm.append("\t".repeat(1)).append(String.format("mov %s, edx \n", name));
+                asm.append(String.format("\tmov eax, %s \n", name));
+                asm.append(String.format("\tmov ebx, %s \n", o.getB().getValue()));
+                asm.append("\txor edx, edx\n");
+                asm.append("\tdiv ebx\n");
+                asm.append(String.format("\tmov %s, edx \n", name));
             } else {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
-                asm.append("\t".repeat(1)).append(String.format("%s eax, %s \n", s, o.getB().getValue()));
-                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
+                asm.append(String.format("\tmov eax, %s \n", name));
+                asm.append(String.format("\t%s eax, %s \n", s, o.getB().getValue()));
+                asm.append(String.format("\tmov %s, eax \n", name));
             }
         } else {
             if (Objects.equals(s, "mul")) {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(1)).append("mul ebx\n");
-                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
+                asm.append(String.format("\tmov eax, %s \n", o.getA().getValue()));
+                asm.append(String.format("\tmov ebx, %s \n", o.getB().getValue()));
+                asm.append("\tmul ebx\n");
+                asm.append(String.format("\tmov %s, eax \n", name));
             } else if (Objects.equals(s, "div")) {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(1)).append("xor edx, edx\n");
-                asm.append("\t".repeat(1)).append("div ebx\n");
-                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
+                asm.append(String.format("\tmov eax, %s \n", o.getA().getValue()));
+                asm.append(String.format("\tmov ebx, %s \n", o.getB().getValue()));
+                asm.append("\txor edx, edx\n");
+                asm.append("\tdiv ebx\n");
+                asm.append(String.format("\tmov %s, eax \n", name));
             } else if (Objects.equals(s, "rem")) {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(1)).append(String.format("mov ebx, %s \n", o.getB().getValue()));
-                asm.append("\t".repeat(1)).append("xor edx, edx\n");
-                asm.append("\t".repeat(1)).append("div ebx\n");
-                asm.append("\t".repeat(1)).append(String.format("mov %s, edx \n", name));
+                asm.append(String.format("\tmov eax, %s \n", o.getA().getValue()));
+                asm.append(String.format("\tmov ebx, %s \n", o.getB().getValue()));
+                asm.append("\txor edx, edx\n");
+                asm.append("\tdiv ebx\n");
+                asm.append(String.format("\tmov %s, edx \n", name));
             } else {
-                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", o.getA().getValue()));
-                asm.append("\t".repeat(1)).append(String.format("%s eax, %s \n", s, o.getB().getValue()));
-                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
+                asm.append(String.format("\tmov eax, %s \n", o.getA().getValue()));
+                asm.append(String.format("\t%s eax, %s \n", s, o.getB().getValue()));
+                asm.append(String.format("\tmov %s, eax \n", name));
             }
         }
     }
@@ -295,6 +290,8 @@ public class Generator {
     private void createAsmFile() {
         try (FileWriter file = new FileWriter("КР-02-Java-IO-04-Vodzinskiy.asm")) {
             file.write(String.valueOf(asm));
+            System.out.println("\nSuccess, target code saved in КР-02-Java-IO-04-Vodzinskiy.asm\n");
+            System.out.println("Generated code:\n" + asm);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

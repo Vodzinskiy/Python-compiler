@@ -1,6 +1,7 @@
 package io.coursework.parser;
 
 import io.coursework.Data;
+import io.coursework.Main;
 import io.coursework.generator.Generator;
 import io.coursework.lexer.Token;
 import io.coursework.parser.expression.*;
@@ -417,8 +418,8 @@ public class Parser {
         System.out.println(stringSentences[token.getPosition().getLine() - 1]);
         System.out.println(" ".repeat(token.getPosition().getSymbol() - 1) + "^".repeat(token.getValue().length()));
         System.out.println(text);
-
-        System.exit(1);
+        System.out.println("\nTry again...\n");
+        Main.start();
     }
 
     private void intoSentence() {
