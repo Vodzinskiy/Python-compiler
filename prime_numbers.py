@@ -3,10 +3,11 @@ def sum_prime_numbers(m, n):
     # сума простих чисел
     result = 0
     # цикл який проходить по всіх числах проміжку
-    for i in range(m, n + 1):
+    for i in range(m, n + 1): #fff
+    # dwdw
         # змінна, яка показує чи є число простим
         # True якщо воно просте
-        prime_number = True
+         prime_number = True
         # цикл який проходить по всіх числах на проміжку
         # від 2 до числа, яке перевіряється чи є воно простим
         for j in range(2, i):

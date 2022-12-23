@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class Lexer {
     private final String code;
@@ -27,8 +26,9 @@ public class Lexer {
      * start of lexical analysis
      */
     public void start() {
-        intoLexemes();
-        intoSentences(code);
+        String codeWithoutComments = code.replaceAll("( *|\t*)#.*", "");
+        intoLexemes(codeWithoutComments);
+        intoSentences(codeWithoutComments);
         for (int i = 0; i < lexemes.size(); i++) {
             switch (lexemes.get(i)) {
                 case "def" -> tokenList.add(new Token("FUNCTION", lexemes.get(i), positions.get(i)));
@@ -69,7 +69,7 @@ public class Lexer {
             }
         }
         writeToFile();
-        Parser parser = new Parser(tokenList, code);
+        Parser parser = new Parser(tokenList, codeWithoutComments);
         parser.start();
     }
 
@@ -83,56 +83,33 @@ public class Lexer {
     /**
      * converting the code into a token list
      */
-    public void intoLexemes() {
+    public void intoLexemes(String code) {
         char[] charArray = code.toCharArray();
         StringBuilder tempLexeme = new StringBuilder();
-        boolean comment = false;
         int lineCount = 1;
         int symbolCount = 1;
 
         for (char c : charArray) {
-            if (c == '#') {
-                comment = true;
-            }
-            if (c == '\n' && comment) {
-                comment = false;
-                lineCount += 1;
+            if (c == ' ') {
+                if (!tempLexeme.toString().equals("")) {
+                    lexemes.add(tempLexeme.toString());
+                    positions.add(new Position(lineCount, symbolCount - tempLexeme.length()));
+                    tempLexeme = new StringBuilder();
+                }
+                symbolCount += 1;
                 continue;
             }
-
-            if (!comment) {
-                if (c == ' ') {
-                    if (!tempLexeme.toString().equals("")) {
-                        lexemes.add(tempLexeme.toString());
-                        positions.add(new Position(lineCount, symbolCount - tempLexeme.length()));
-                        tempLexeme = new StringBuilder();
-                    }
-                    symbolCount += 1;
-                    continue;
+            if (c == '\r') {
+                continue;
+            }
+            if (Arrays.asList(Data.separator).contains(String.valueOf(c))) {
+                if (!tempLexeme.toString().equals("")) {
+                    lexemes.add(tempLexeme.toString());
+                    positions.add(new Position(lineCount, symbolCount - tempLexeme.length()));
+                    tempLexeme = new StringBuilder();
                 }
-                if (c == '\r') {
-                    continue;
-                }
-                if (Arrays.asList(Data.separator).contains(String.valueOf(c))) {
-                    if (!tempLexeme.toString().equals("")) {
-                        lexemes.add(tempLexeme.toString());
-                        positions.add(new Position(lineCount, symbolCount - tempLexeme.length()));
-                        tempLexeme = new StringBuilder();
-                    }
-                    lexemes.add(String.valueOf(c));
-                    positions.add(new Position(lineCount, symbolCount));
-                    if (c == '\n') {
-                        lineCount += 1;
-                        symbolCount = 0;
-                    }
-                    if (c == '\t') {
-                        symbolCount += 4;
-                    } else {
-                        symbolCount += 1;
-                    }
-                    continue;
-                }
-                tempLexeme.append(c);
+                lexemes.add(String.valueOf(c));
+                positions.add(new Position(lineCount, symbolCount));
                 if (c == '\n') {
                     lineCount += 1;
                     symbolCount = 0;
@@ -142,18 +119,17 @@ public class Lexer {
                 } else {
                     symbolCount += 1;
                 }
+                continue;
             }
-            else {
-                if (lexemes.size()>0) {
-                    while (!Objects.equals(lexemes.get(lexemes.size() - 1), "\n")) {
-                        if (!Objects.equals(lexemes.get(lexemes.size() - 1), "\t")) {
-                            break;
-                        }
-                        lexemes.remove(lexemes.size()-1);
-                        positions.remove(lexemes.size()-1);
-                        symbolCount -= 4;
-                    }
-                }
+            tempLexeme.append(c);
+            if (c == '\n') {
+                lineCount += 1;
+                symbolCount = 0;
+            }
+            if (c == '\t') {
+                symbolCount += 4;
+            } else {
+                symbolCount += 1;
             }
         }
         if (!tempLexeme.isEmpty()) {
