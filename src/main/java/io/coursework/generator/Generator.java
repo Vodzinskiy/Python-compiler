@@ -113,17 +113,20 @@ public class Generator {
                         asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
                                 .append(((NumberExpression) (((Assignment) c).getExpression())).getNum()).append("\n");
                     } else if (((Assignment) c).getExpression().getClass() == BoolExpression.class) {
-                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", \"")
-                                .append(((BoolExpression) (((Assignment) c).getExpression())).getFlag()).append("\"\n");
+                        if (((BoolExpression) (((Assignment) c).getExpression())).getFlag()) {
+                            asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", 1\n");
+                        } else {
+                            asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", 0\n");
+                        }
                     } else {
-                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", ")
-                                .append(((VariableExpression) (((Assignment) c).getExpression())).getVariable().getName()).append("\n");
+                        asm.append("\t".repeat(1)).append("mov eax, ").append(((VariableExpression) (((Assignment) c).getExpression())).getVariable().getName()).append("\n");
+                        asm.append("\t".repeat(1)).append("mov ").append(((Assignment) c).getVariable().getName()).append(", eax").append("\n");
                     }
                 } else {
                     mathOperation(((OperationExpression) ((Assignment) c).getExpression()), ((Assignment) c).getVariable().getName());
                 }
             } else if (c.getClass() == Print.class) {
-                String temp = "";
+                String temp;
                 if (((Print) c).getText() != null) {
                     temp = ((Print) c).getText();
                 } else if (((Print) c).getVariable() != null) {
@@ -169,7 +172,13 @@ public class Generator {
                 } else {
                     end = ((For) c).getEnd().getValue();
                 }
-                asm.append("\t".repeat(1)).append(String.format("mov %s, %s\n", ((For) c).getI().getName(), start));
+                if (Pattern.matches("[0-9]*", start)) {
+                    asm.append("\t".repeat(1)).append(String.format("mov %s, %s\n", ((For) c).getI().getName(), start));
+                } else {
+                    asm.append("\t".repeat(1)).append("mov eax, ").append(start).append("\n");
+                    asm.append("\t".repeat(1)).append("mov ").append(((For) c).getI().getName()).append(", eax").append("\n");
+                }
+
                 loopCount++;
                 String name = "loop" + loopCount;
                 asm.append("\t".repeat(1)).append(name).append(":\n");
@@ -184,6 +193,33 @@ public class Generator {
                 asm.append("\t".repeat(1)).append("inc ").append(((For) c).getI().getName()).append("\n");
                 asm.append("\t".repeat(1)).append("jmp ").append(name).append("\n");
                 asm.append("\t".repeat(1)).append(name).append("_end:\n");
+            } else if (c.getClass() == If.class) {
+                if (((If) c).getBool() == null) {
+                    String left;
+                    String right;
+                    if (((If) c).getA().getClass() == OperationExpression.class) {
+                        mathOperation(((OperationExpression) ((If) c).getA()), "ecx");
+                        left = "ecx";
+                    } else {
+                        left = ((If) c).getA().getValue();
+                    }
+                    if (((If) c).getB().getClass() == OperationExpression.class) {
+                        mathOperation(((OperationExpression) ((If) c).getB()), "ecx");
+                        right = "ecx";
+                    } else {
+                        right = ((If) c).getB().getValue();
+                    }
+                    if (!Pattern.matches("[0-9]*", right)) {
+                        asm.append("\t".repeat(1)).append("mov ebx, ").append(right).append("\n");
+                        asm.append("\t".repeat(1)).append(String.format(".if %s %s %s\n",left, ((If) c).getCompares() , "ebx"));
+                    } else {
+                        asm.append("\t".repeat(1)).append(String.format(".if %s %s %s\n",left, ((If) c).getCompares() , right));
+                    }
+                } else {
+                    asm.append("\t".repeat(1)).append(String.format(".if %s == 1\n", ((If) c).getBool().getValue()));
+                }
+                bodyCreate(((If) c).getBody());
+                asm.append("\t".repeat(1)).append(".endif\n");
             }
         }
     }
@@ -226,7 +262,9 @@ public class Generator {
                 asm.append("\t".repeat(1)).append("div ebx\n");
                 asm.append("\t".repeat(1)).append(String.format("mov %s, edx \n", name));
             } else {
-                asm.append("\t".repeat(1)).append(String.format("%s %s, %s \n", s, name, o.getB().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("mov eax, %s \n", name));
+                asm.append("\t".repeat(1)).append(String.format("%s eax, %s \n", s, o.getB().getValue()));
+                asm.append("\t".repeat(1)).append(String.format("mov %s, eax \n", name));
             }
         } else {
             if (Objects.equals(s, "mul")) {

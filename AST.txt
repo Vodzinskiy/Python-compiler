@@ -1,18 +1,61 @@
 Program:
 	Function sum_prime_numbers:
 		Args:
+			Name: m
+			Name: n
 		Body:
 			Assignment:
-				Variable: r
-				Expression: 3
+				Variable: result
+				Expression: 0
 			For:
 				Range:
-					Start: 2
-					End: r [INTEGER]
+					Start: m [INTEGER]
+					End: n [INTEGER] + 1
 				Body:
-					Print:
-						Expression:
-							Variable: "i"
-	Call sum_prime_numbers :
-		Args: 
+					Assignment:
+						Variable: prime_number
+						Expression: true
+					For:
+						Range:
+							Start: 2
+							End: i [INTEGER]
+						Body:
+							If:
+								Condition:
+									Comparison: 
+										Sign: ==
+										Left operand: i [INTEGER] % j [INTEGER]
+										Right operand: 0
+								Body:
+									Assignment:
+										Variable: prime_number
+										Expression: false
+					If:
+						Condition:
+							Boolean variable: prime_number [BOOLEAN]
+						Body:
+							If:
+								Condition:
+									Comparison: 
+										Sign: !=
+										Left operand: i [INTEGER]
+										Right operand: 1
+								Body:
+									Assignment:
+										Variable: result
+										Expression: result [INTEGER] + i [INTEGER]
+			Return:
+				Value: result [INTEGER]
+	Function main:
+		Args:
+		Body:
+			Return:
+				Call sum_prime_numbers :
+					Args: 
+						argument: 2
+						argument: 20
 
+
+	Print:
+		Expression:
+			Function Call: main

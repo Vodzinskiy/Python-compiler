@@ -1,6 +1,5 @@
 package io.coursework.parser;
 
-import io.coursework.parser.expression.BoolExpression;
 import io.coursework.parser.expression.Expression;
 
 import java.util.ArrayList;
