@@ -1,7 +1,4 @@
 Program:
-	Assignment:
-		Variable: me
-		Expression: 7
 	Function sum_prime_numbers:
 		Args:
 			Name: m
@@ -12,8 +9,8 @@ Program:
 				Expression: 0
 			For:
 				Range:
-					Start: me [INTEGER]
-					End: n [INTEGER] + 1
+					Start: m
+					End: n + 1
 				Body:
 					Assignment:
 						Variable: prime_number
@@ -21,13 +18,13 @@ Program:
 					For:
 						Range:
 							Start: 2
-							End: i [INTEGER]
+							End: i
 						Body:
 							If:
 								Condition:
 									Comparison: 
 										Sign: ==
-										Left operand: i [INTEGER] % j [INTEGER]
+										Left operand: i % j
 										Right operand: 0
 								Body:
 									Assignment:
@@ -35,20 +32,20 @@ Program:
 										Expression: false
 					If:
 						Condition:
-							Boolean variable: prime_number [BOOLEAN]
+							Boolean variable: prime_number
 						Body:
 							If:
 								Condition:
 									Comparison: 
 										Sign: !=
-										Left operand: i [INTEGER]
+										Left operand: i
 										Right operand: 1
 								Body:
 									Assignment:
 										Variable: result
-										Expression: result [INTEGER] + i [INTEGER]
+										Expression: result + i
 			Return:
-				Value: result [INTEGER]
+				Value: result
 	Function main:
 		Args:
 		Body:

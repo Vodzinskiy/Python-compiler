@@ -79,7 +79,7 @@ public class Lexer {
      * converting the code into a sentences
      */
     public void intoSentences(String code) {
-        sentences = code.split("\n");
+        sentences = code.replaceAll("\t", "    ").split("\n");
     }
 
     /**

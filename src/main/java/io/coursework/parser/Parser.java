@@ -64,7 +64,9 @@ public class Parser {
 
             Expression start = new NumberExpression(0);
             Expression end;
+            forArgCheck(sentence, sentence.size() - 3);
             if (Objects.equals(sentence.get(sentence.size() - 4).getName(), "OPERATORS")) {
+                forArgCheck(sentence, sentence.size() - 5);
                 end = new OperationExpression(sentence.get(sentence.size() - 4).getValue(),
                         argsCheck(sentence, sentence.size() - 5, variables), argsCheck(sentence, sentence.size() - 3, variables));
             } else {
@@ -72,9 +74,11 @@ public class Parser {
             }
 
             if (sentence.size() > k + 8) {
+                forArgCheck(sentence, k + 5);
                 if (Objects.equals(sentence.get(k + 6).getValue(), ",")) {
                     start = argsCheck(sentence, k + 5, variables);
                 } else if (Objects.equals(sentence.get(k + 8).getValue(), ",")) {
+                    forArgCheck(sentence, k + 7);
                     start = new OperationExpression(sentence.get(k + 6).getValue(),
                             argsCheck(sentence, k + 5, variables), argsCheck(sentence, k + 7, variables));
                 }
@@ -92,7 +96,7 @@ public class Parser {
                         errorMassage(sentence.get(k + 1), "Error: unknown variable");
                     }
                     if (!Objects.equals(Objects.requireNonNull(variableFind(variables, sentence.get(k + 1).getValue())).getType(), "BOOLEAN")) {
-                        errorMassage(sentence.get(k + 1), "Error: variable must be a boolean");
+                        errorMassage(sentence.get(k + 1), "TypeError: type of variable must be an boolean");
                     }
                     bool = new VariableExpression(variableFind(variables, sentence.get(k + 1).getValue()));
                 }
@@ -119,7 +123,7 @@ public class Parser {
             }
         } else if (Objects.equals(sentence.get(k).getName(), "IDENTIFIER") &&
                 Objects.equals(sentence.get(k + 1).getName(), "OPEN_PARENTHESES")) {
-            callCheck(sentence, k);
+            callCheck(sentence, k, k+2);
             if (functionFind(functions, sentence.get(k).getValue()) == null) {
                 errorMassage(sentence.get(k), "Error: unknown function");
             }
@@ -167,7 +171,7 @@ public class Parser {
                         variables.add(v);
                     } else if (Objects.equals(sentence.get(k + 2).getName(), "IDENTIFIER")) {
                         if (!Objects.equals(Objects.requireNonNull(variableFind(variables, sentence.get(k + 2).getValue())).getType(), "INTEGER")) {
-                            errorMassage(sentence.get(k + 2), "TypeError: type of variable must be an integer");
+                            errorMassage(sentence.get(k + 2), "TypeError: sentence.get(sentence.size() - 5)");
                         }
                         if (variableFind(variables, sentence.get(k + 2).getValue()) == null) {
                             errorMassage(sentence.get(k + 2), "Error: unknown variable");
@@ -337,20 +341,17 @@ public class Parser {
         }
     }
 
-    private void callCheck(ArrayList<Token> tokens, int k) {
+    private void callCheck(ArrayList<Token> tokens, int k, int l) {
         positionCheck(tokens, tokens.size() - 1, "CLOSE_PARENTHESES");
-
-        for (int i = k + 2; i < tokens.size() - 1; i++) {
+        for (int i = l; i < tokens.size()-1; i++) {
             if (!Objects.equals(tokens.get(i).getName(), "IDENTIFIER") &&
-                    !Objects.equals(tokens.get(i).getName(), "NUMBER") &&
-                    !Objects.equals(tokens.get(i).getName(), "BOOLEAN") && i - k % 2 == 0) {
+                    !Objects.equals(tokens.get(i).getName(), "NUMBER") && (i - k) % 2 == 0) {
                 errorMassage(tokens.get(i), "SyntaxError: invalid syntax");
             }
             if (!Objects.equals(tokens.get(i).getValue(), ",") && i - k % 2 == 1) {
                 errorMassage(tokens.get(i), "SyntaxError: invalid syntax");
             }
         }
-
     }
 
     private void assignmentCheck(ArrayList<Token> tokens, int k) {
@@ -392,11 +393,12 @@ public class Parser {
                 errorMassage(tokens.get(k + 1), "SyntaxError: invalid syntax");
             }
         } else {
-
             ArrayList<Token> t = new ArrayList<>(tokens.subList(k + 3, tokens.size()));
-            callCheck(t, k);
+            if (functionFind(functions, tokens.get(k+1).getValue()) == null) {
+                errorMassage(tokens.get(k+1), "Error: unknown function");
+            }
+            callCheck(t, 0, 0);
         }
-
     }
 
     private void printCheck(ArrayList<Token> tokens, int k) {
@@ -408,8 +410,11 @@ public class Parser {
                 errorMassage(tokens.get(k + 2), "SyntaxError: invalid parameter to print");
             }
         } else {
-            ArrayList<Token> t = new ArrayList<>(tokens.subList(k + 2, tokens.size() - 1));
-            callCheck(t, k);
+            ArrayList<Token> t = new ArrayList<>(tokens.subList(k + 4, tokens.size() - 1));
+            if (functionFind(functions, tokens.get(k+2).getValue()) == null) {
+                errorMassage(tokens.get(k+2), "Error: unknown function");
+            }
+            callCheck(t, 0, 0);
         }
     }
 
@@ -440,7 +445,7 @@ public class Parser {
     }
 
     public void intoStringSentences(String code) {
-        stringSentences = code.split("\n");
+        stringSentences = code.replaceAll("\t", "    ").split("\n");
     }
 
     private Variable variableFind(ArrayList<Variable> variables, String name) {
@@ -488,6 +493,13 @@ public class Parser {
         }
         i -= 1;
         return content;
+    }
+
+    private void forArgCheck(ArrayList<Token> sentence, int k) {
+        if (!Objects.equals(sentence.get(k).getName(), "NUMBER") &&
+                !Objects.equals(sentence.get(k).getName(), "IDENTIFIER")) {
+            errorMassage(sentence.get(k), "TypeError: type of variable must be an integer");
+        }
     }
 
     private void positionCheck(ArrayList<Token> tokens, int l, String text) {

@@ -27,11 +27,10 @@ public class Generator {
                 .model flat, stdcall
                 option casemap:none
                                 
-                include     \\masm32\\include\\masm32rt.inc
+                include \\masm32\\include\\masm32rt.inc
                                 
                 """);
         dataCreate();
-
         asm.append(".code\n");
         functionCreate();
         asm.append("start:\n");
@@ -288,10 +287,16 @@ public class Generator {
     }
 
     private void createAsmFile() {
-        try (FileWriter file = new FileWriter("КР-02-Java-IO-04-Vodzinskiy.asm")) {
+        try (FileWriter file = new FileWriter("KP-02-Java-IO-04-Vodzinskiy.asm")) {
             file.write(String.valueOf(asm));
             System.out.println("\nSuccess, target code saved in КР-02-Java-IO-04-Vodzinskiy.asm\n");
             System.out.println("Generated code:\n" + asm);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            System.out.println("\n\nPress Enter key to close...");
+            System.in.read();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
