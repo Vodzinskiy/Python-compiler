@@ -58,7 +58,7 @@ public class Generator {
                     }
                 }
                 asm.append("\n");
-                variableCreate(((Function) c).getBody());
+                localVariableCreate(((Function) c).getBody());
                 bodyCreate(((Function) c).getBody());
                 asm.append("\tret\n");
                 asm.append(((Function) c).getName()).append(" endp\n\n");
@@ -79,22 +79,38 @@ public class Generator {
         if (asg.size() != 0) {
             asm.append(".data\n");
         }
+        variableCreate(contents, names);
         for (Assignment a : asg) {
             asm.append("\t").append(a.getVariable().getName()).append(" dword ?\n");
         }
         asm.append("\n");
     }
+    private void variableCreate(ArrayList<Contents> contents, ArrayList<String> names) {
+        for (Contents c : contents) {
+            if (c.getClass() == Assignment.class && !variablesName.contains(((Assignment) c).getVariable().getName()) &&
+            !names.contains(((Assignment) c).getVariable().getName())) {
+                asm.append("\t").append(((Assignment) c).getVariable().getName()).append(" dword ?\n");
+                variablesName.add(((Assignment) c).getVariable().getName());
+            }else if (c.getClass() == For.class) {
+                asm.append("\t").append(((For) c).getI().getName()).append(" dword ?\n");
+                variableCreate(((For) c).getBody(), names);
+            } else if (c.getClass() == If.class) {
+                variableCreate(((If) c).getBody(), names);
+            }
+        }
+    }
 
-    private void variableCreate(ArrayList<Contents> contents) {
+
+    private void localVariableCreate(ArrayList<Contents> contents) {
         for (Contents c : contents) {
             if (c.getClass() == Assignment.class && !variablesName.contains(((Assignment) c).getVariable().getName())) {
                 asm.append("\tlocal ").append(((Assignment) c).getVariable().getName()).append(": dword\n");
                 variablesName.add(((Assignment) c).getVariable().getName());
             } else if (c.getClass() == For.class) {
                 asm.append("\tlocal ").append(((For) c).getI().getName()).append(": dword\n");
-                variableCreate(((For) c).getBody());
+                localVariableCreate(((For) c).getBody());
             } else if (c.getClass() == If.class) {
-                variableCreate(((If) c).getBody());
+                localVariableCreate(((If) c).getBody());
             }
         }
     }

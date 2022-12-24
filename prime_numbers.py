@@ -1,14 +1,21 @@
-def sum_prime_numbers(m, n):
-    result = 0
-    for i in range(m, n + 1):
-        prime_number = True
-        for j in range(2, i):
-            if i % j == 0:
-                prime_number = False
-        if prime_number:
-            if i != 1:
-                result += i
-    return result
-def main():
-    return sum_prime_numbers(40, 100)
-print(main())
+result = 0
+m = 50
+n = 100
+for i in range(m, n + 1):
+    # змінна, яка показує чи є число простим
+    # True якщо воно просте
+    prime_number = True
+    # цикл який проходить по всіх числах на проміжку
+    # від 2 до числа, яке перевіряється чи є воно простим
+    for j in range(2, i):
+        # якщо число ділиться без остачі на інше число (окрім одиниці
+        # і його самого) то воно не є простим
+        if i % j == 0:
+            # число не є простим
+            prime_number = False
+    # якщо це просте число і не є 1, тому що 1 не просте число,
+    # це число додається до загальної суми
+    if prime_number:
+        if i != 1:
+            result += i
+print(result)

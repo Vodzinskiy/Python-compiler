@@ -4,14 +4,19 @@ option casemap:none
 
 include \masm32\include\masm32rt.inc
 
+.data
+	i dword ?
+	prime_number dword ?
+	j dword ?
+	result dword ?
+	m dword ?
+	n dword ?
 
 .code
-sum_prime_numbers proc m:dword, n:dword
-	local result: dword
-	local i: dword
-	local prime_number: dword
-	local j: dword
+start:
 	mov result, 0
+	mov m, 50
+	mov n, 100
 	mov eax, n 
 	add eax, 1 
 	mov n, eax 
@@ -48,19 +53,6 @@ sum_prime_numbers proc m:dword, n:dword
 	inc i
 	jmp loop1
 	loop1_end:
-	mov eax, result
-	ret
-sum_prime_numbers endp
-
-main proc 
-	push 20
-	push 2
-	call sum_prime_numbers
-	ret
-main endp
-
-start:
-	call main
-	fn MessageBox, 0, str$(eax),"КР-02-Java-IO-04-Vodzinskiy",MB_OK
+	fn MessageBox, 0, str$(result),"КР-02-Java-IO-04-Vodzinskiy",MB_OK
 	invoke ExitProcess, 0
 end start
